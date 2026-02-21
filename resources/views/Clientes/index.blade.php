@@ -6,7 +6,10 @@
     openCreate: {{ $errors->any() ? 'true' : 'false' }},
     openEdit: null,
     openDelete: null,
-    openTrash: false
+    openVehiculos: null,
+    openTrash: false,
+    search: '',
+    searchTrash: ''
 }">
 
     <!-- HEADER -->
@@ -26,6 +29,16 @@
         </div>
     </div>
 
+    <!-- BUSCADOR CLIENTES -->
+    <div class="mb-4">
+        <input 
+            type="text"
+            x-model="search"
+            placeholder="Buscar cliente..."
+            class="w-full md:w-1/3 border rounded-xl px-4 py-2"
+        >
+    </div>
+
     <!-- TABLA -->
     <div class="bg-white rounded-2xl shadow border overflow-hidden">
         <table class="w-full text-sm">
@@ -35,39 +48,52 @@
                     <th class="px-6 py-4">Teléfono</th>
                     <th class="px-6 py-4">Email</th>
                     <th class="px-6 py-4">Dirección</th>
+                    <th class="px-6 py-4 text-center">Vehículos</th>
                     <th class="px-6 py-4 text-center">Acciones</th>
                 </tr>
             </thead>
 
             <tbody class="divide-y">
                 @forelse($clientes as $cliente)
-                <tr class="hover:bg-gray-50">
+                <tr class="hover:bg-gray-50"
+                    x-show="('{{ strtolower($cliente->nombre.' '.$cliente->apellido.' '.$cliente->email.' '.$cliente->telefono) }}')
+                        .includes(search.toLowerCase())"
+                >
                     <td class="px-6 py-4">
                         {{ $cliente->nombre }} {{ $cliente->apellido }}
                     </td>
                     <td class="px-6 py-4">{{ $cliente->telefono }}</td>
                     <td class="px-6 py-4">{{ $cliente->email }}</td>
                     <td class="px-6 py-4">{{ $cliente->direccion }}</td>
+                    <td class="px-6 py-4 text-center">
+    @if($cliente->vehiculos_count > 0)
+        <button 
+            @click="openVehiculos = {{ $cliente->id }}"
+            class="inline-flex items-center gap-1 bg-blue-100 text-blue-700 px-3 py-1 rounded-lg hover:bg-blue-200 transition">
+
+            🚗 {{ $cliente->vehiculos_count }}
+
+        </button>
+    @else
+        <span class="text-gray-400 text-sm">Sin vehículos</span>
+    @endif
+</td>
 
                     <td class="px-6 py-4 text-center space-x-3">
-
-                        <!-- EDITAR -->
                         <button @click="openEdit = {{ $cliente->id }}"
                             class="text-yellow-500 hover:text-yellow-700">
                             ✏️
                         </button>
 
-                        <!-- ELIMINAR -->
                         <button @click="openDelete = {{ $cliente->id }}"
                             class="text-red-600 hover:text-red-800">
                             🗑️
                         </button>
-
                     </td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="5" class="text-center py-6 text-gray-400">
+                    <td colspan="6" class="text-center py-6 text-gray-400">
                         No hay clientes registrados
                     </td>
                 </tr>
@@ -191,6 +217,16 @@
         <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-3xl z-50">
             <h2 class="text-xl font-semibold mb-6">Clientes Eliminados</h2>
 
+            <!-- BUSCADOR PAPELERA -->
+            <div class="mb-4">
+                <input 
+                    type="text"
+                    x-model="searchTrash"
+                    placeholder="Buscar cliente eliminado..."
+                    class="w-full border rounded-xl px-4 py-2"
+                >
+            </div>
+
             <table class="w-full text-sm">
                 <thead class="bg-gray-50 text-xs uppercase">
                     <tr>
@@ -201,13 +237,15 @@
 
                 <tbody>
                     @forelse($eliminados as $cliente)
-                    <tr class="border-b">
+                    <tr class="border-b"
+                        x-show="('{{ strtolower($cliente->nombre.' '.$cliente->apellido.' '.$cliente->email.' '.$cliente->telefono) }}')
+                            .includes(searchTrash.toLowerCase())"
+                    >
                         <td class="px-4 py-2">
                             {{ $cliente->nombre }} {{ $cliente->apellido }}
                         </td>
                         <td class="px-4 py-2 text-center space-x-3">
 
-                            <!-- RESTAURAR -->
                             <form action="{{ route('clientes.restore',$cliente->id) }}"
                                 method="POST" class="inline">
                                 @csrf
@@ -216,7 +254,6 @@
                                 </button>
                             </form>
 
-                            <!-- ELIMINAR DEFINITIVO -->
                             <form action="{{ route('clientes.forceDelete',$cliente->id) }}"
                                 method="POST" class="inline">
                                 @csrf
@@ -246,7 +283,52 @@
             </div>
         </div>
     </div>
+    @foreach($clientes as $cliente)
+        <div x-show="openVehiculos === {{ $cliente->id }}"
+            class="fixed inset-0 flex items-center justify-center z-50">
 
+            <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                @click="openVehiculos=null"></div>
+
+            <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-2xl z-50">
+                <h2 class="text-xl font-semibold mb-6">
+                    Vehículos de {{ $cliente->nombre }} {{ $cliente->apellido }}
+                </h2>
+
+                @if($cliente->vehiculos->count())
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50 text-xs uppercase">
+                            <tr>
+                                <th class="px-4 py-2">Marca</th>
+                                <th class="px-4 py-2">Modelo</th>
+                                <th class="px-4 py-2">Placa</th>
+                                <th class="px-4 py-2">Color</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($cliente->vehiculos as $vehiculo)
+                            <tr class="border-b">
+                                <td class="px-4 py-2">{{ $vehiculo->marca }}</td>
+                                <td class="px-4 py-2">{{ $vehiculo->modelo }}</td>
+                                <td class="px-4 py-2">{{ $vehiculo->placa }}</td>
+                                <td class="px-4 py-2">{{ $vehiculo->color }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                @else
+                    <p class="text-gray-400">Este cliente no tiene vehículos.</p>
+                @endif
+
+                <div class="flex justify-end mt-6">
+                    <button @click="openVehiculos=null"
+                        class="px-4 py-2 border rounded-xl">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+        @endforeach
 </div>
-
+        
 @endsection

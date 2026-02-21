@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ClienteController;
+use App\Http\Controllers\VehiculoController;
+use App\Http\Controllers\ServicioController;
 
 Route::get('/', function () {
 
@@ -47,3 +49,19 @@ Route::post('/clientes/{id}/restore', [ClienteController::class, 'restore'])
 
 Route::delete('/clientes/{id}/force-delete', [ClienteController::class, 'forceDelete'])
     ->name('clientes.forceDelete');
+
+Route::resource('vehiculos', VehiculoController::class);
+
+Route::post('vehiculos/{id}/restore', [VehiculoController::class,'restore'])->name('vehiculos.restore');
+
+Route::delete('vehiculos/{id}/forceDelete', [VehiculoController::class,'forceDelete'])->name('vehiculos.forceDelete');
+
+Route::resource('servicios', ServicioController::class);
+
+Route::post('servicios/{id}/restore', 
+    [ServicioController::class, 'restore'])->name('servicios.restore');
+
+Route::delete('servicios/{id}/force-delete', 
+    [ServicioController::class, 'forceDelete'])->name('servicios.forceDelete');
+
+    

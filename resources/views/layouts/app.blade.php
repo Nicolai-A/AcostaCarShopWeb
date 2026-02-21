@@ -64,9 +64,10 @@
         </span>
     </a>
 
-    <!-- Vehículos (sin ruta aún) -->
-    <a href="#" 
-       class="relative flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-gray-800 group">
+    <!-- Vehículos -->
+    <a href="{{ route('vehiculos.index') }}" 
+    class="relative flex items-center gap-3 px-4 py-2 rounded-lg 
+    {{ request()->routeIs('vehiculos.*') ? 'bg-blue-600 text-white' : 'hover:bg-gray-800' }} group">
 
         <i data-lucide="car" class="w-4 h-4"></i>
         <span x-show="open">Vehículos</span>

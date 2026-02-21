@@ -4,17 +4,21 @@ namespace App\Http\Controllers;
 use App\Models\Cliente;
 use Illuminate\Http\Request;
 
-class ClienteController extends Controller
+    class ClienteController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
 {
-    $query = Cliente::query();
+    // 🔎 CLIENTES ACTIVOS con conteo de vehículos
+    $query = Cliente::with([
+    'vehiculos' => function($q){
+            $q->latest();
+        }
+    ])->withCount('vehiculos');
 
-    // 🔎 BÚSQUEDA
-    if ($request->filled('buscar')) {
+        if ($request->filled('buscar')) {
         $query->where(function($q) use ($request) {
             $q->where('nombre', 'like', '%' . $request->buscar . '%')
               ->orWhere('apellido', 'like', '%' . $request->buscar . '%')
@@ -22,16 +26,16 @@ class ClienteController extends Controller
         });
     }
 
-    // 📄 CLIENTES ACTIVOS (no eliminados)
-    $clientes = $query->latest()
+        $clientes = $query->latest()
                       ->paginate(5)
                       ->withQueryString();
 
-    // 🗑 CLIENTES ELIMINADOS (Soft Delete)
-    $eliminados = Cliente::onlyTrashed()
-                         ->latest()
-                         ->get();
-
+    // 🔎 ELIMINADOS
+        $eliminados = Cliente::onlyTrashed()
+                        ->withCount('vehiculos')
+                        ->latest()
+                        ->get();
+        
     return view('clientes.index', compact('clientes', 'eliminados'));
 }
 
