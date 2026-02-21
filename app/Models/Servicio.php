@@ -13,7 +13,6 @@ class Servicio extends Model
         'nombre',
         'descripcion',
         'precio',
-        'duracion_estimada',
         'activo'
     ];
 }

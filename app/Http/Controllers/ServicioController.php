@@ -24,6 +24,7 @@ class ServicioController extends Controller
     {
         $request->validate([
             'nombre' => 'required|min:3|max:100',
+            'descripcion' => 'required|min:3|max:100',
             'precio' => 'required|numeric|min:0'
         ]);
 
@@ -42,6 +43,7 @@ class ServicioController extends Controller
     {
         $request->validate([
             'nombre' => 'required|min:3|max:100',
+            'descripcion' => 'required|min:3|max:100',
             'precio' => 'required|numeric|min:0'
         ]);
 

@@ -16,7 +16,6 @@ return new class extends Migration
         $table->string('nombre');
         $table->text('descripcion')->nullable();
         $table->decimal('precio', 10, 2);
-        $table->integer('duracion_estimada')->nullable(); // minutos
         $table->boolean('activo')->default(true);
         $table->timestamps();
         $table->softDeletes();

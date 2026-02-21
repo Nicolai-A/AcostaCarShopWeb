@@ -13,7 +13,7 @@
 
     <!-- HEADER -->
     <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-semibold">Vehículos</h1>
+        <h1 class="text-2xl font-semibold">Servicios</h1>
 
         <div class="space-x-3">
             <button @click="openTrash = true"
@@ -23,7 +23,7 @@
 
             <button @click="openCreate = true"
                 class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl">
-                + Nuevo Vehículo
+                + Nuevo Servicio
             </button>
         </div>
     </div>
@@ -44,7 +44,6 @@
                     <th class="px-6 py-4">Cliente</th>
                     <th class="px-6 py-4">Marca</th>
                     <th class="px-6 py-4">Modelo</th>
-                    <th class="px-6 py-4">Año</th>
                     <th class="px-6 py-4">Placa</th>
                     <th class="px-4 py-2">Color</th>
                     <th class="px-6 py-4 text-center">Acciones</th>
@@ -52,53 +51,37 @@
             </thead>
 
             <tbody class="divide-y">
-                @forelse($vehiculos as $vehiculo)
-                <tr class="hover:bg-gray-50"
-                    x-show="('{{ strtolower(
-                        $vehiculo->marca.' '.
-                        $vehiculo->modelo.' '.
-                        $vehiculo->anio.' '.
-                        $vehiculo->placa.' '.
-                        optional($vehiculo->cliente)->nombre.' '.
-                        optional($vehiculo->cliente)->apellido
-                    ) }}').includes(search.toLowerCase())"
-                >
+                
                     <td class="px-6 py-4">
-                        {{ $vehiculo->cliente->nombre ?? '' }}
-                        {{ $vehiculo->cliente->apellido ?? '' }}
                     </td>
-                    <td class="px-6 py-4">{{ $vehiculo->marca }}</td>
-                    <td class="px-6 py-4">{{ $vehiculo->modelo }}</td>
-                    <td class="px-6 py-4">{{ $vehiculo->anio }}</td>
-                    <td class="px-6 py-4">{{ $vehiculo->placa }}</td>
-                    <td class="px-4 py-2">{{ $vehiculo->color }}</td>
+                    <td class="px-6 py-4"></td>
+                    <td class="px-6 py-4"></td>
+                    <td class="px-6 py-4"></td>
+                    <td class="px-4 py-2"></td>
 
                     <td class="px-6 py-4 text-center space-x-3">
-                        <button @click="openEdit = {{ $vehiculo->id }}"
+                        <button 
                             class="text-yellow-500 hover:text-yellow-700">
                             ✏️
                         </button>
 
-                        <button @click="openDelete = {{ $vehiculo->id }}"
+                        <button 
                             class="text-red-600 hover:text-red-800">
                             🗑️
                         </button>
                     </td>
                 </tr>
-                @empty
                 <tr>
-                    <td colspan="7" class="text-center py-6 text-gray-400">
+                    <td colspan="5" class="text-center py-6 text-gray-400">
                         No hay vehículos registrados
                     </td>
                 </tr>
-                @endforelse
             </tbody>
         </table>
     </div>
 
     <!-- PAGINACIÓN -->
     <div class="mt-6">
-        {{ $vehiculos->links() }}
     </div>
 
 
@@ -120,11 +103,6 @@
                     <select name="cliente_id"
                         class="w-full border rounded-xl px-4 py-2">
                         <option value="">Seleccione Cliente</option>
-                        @foreach($clientes as $cliente)
-                            <option value="{{ $cliente->id }}">
-                                {{ $cliente->nombre }} {{ $cliente->apellido }}
-                            </option>
-                        @endforeach
                     </select>
 
                     <input name="marca" placeholder="Marca"
@@ -162,8 +140,8 @@
 
 
     <!-- ===================== MODAL EDITAR ===================== -->
-    @foreach($vehiculos as $vehiculo)
-    <div x-show="openEdit === {{ $vehiculo->id }}"
+
+    <!-- <div 
         class="fixed inset-0 flex items-center justify-center z-50">
 
         <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"
@@ -172,7 +150,7 @@
         <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-lg z-50">
             <h2 class="text-xl font-semibold mb-6">Editar Vehículo</h2>
 
-            <form action="{{ route('vehiculos.update',$vehiculo->id) }}"
+            <form "
                 method="POST">
                 @csrf
                 @method('PUT')
@@ -181,32 +159,21 @@
 
                     <select name="cliente_id"
                         class="w-full border rounded-xl px-4 py-2">
-                        @foreach($clientes as $cliente)
-                            <option value="{{ $cliente->id }}"
-                                {{ $vehiculo->cliente_id == $cliente->id ? 'selected' : '' }}>
-                                {{ $cliente->nombre }} {{ $cliente->apellido }}
-                            </option>
-                        @endforeach
                     </select>
 
                     <input name="marca"
-                        value="{{ $vehiculo->marca }}"
                         class="w-full border rounded-xl px-4 py-2">
 
                     <input name="modelo"
-                        value="{{ $vehiculo->modelo }}"
                         class="w-full border rounded-xl px-4 py-2">
 
                     <input name="anio"
-                        value="{{ $vehiculo->anio }}"
                         class="w-full border rounded-xl px-4 py-2">
 
                     <input name="placa"
-                        value="{{ $vehiculo->placa }}"
                         class="w-full border rounded-xl px-4 py-2">
 
                     <input name="color"
-                        value="{{ $vehiculo->color }}"
                         class="w-full border rounded-xl px-4 py-2">
 
                 </div>
@@ -225,13 +192,12 @@
                 </div>
             </form>
         </div>
-    </div>
-    @endforeach
+    </div> -->
 
 
     <!-- ===================== MODAL ELIMINAR ===================== -->
-    @foreach($vehiculos as $vehiculo)
-    <div x-show="openDelete === {{ $vehiculo->id }}"
+
+    <!-- <div 
         class="fixed inset-0 flex items-center justify-center z-50">
 
         <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"
@@ -242,7 +208,7 @@
                 ¿Eliminar este vehículo?
             </h2>
 
-            <form action="{{ route('vehiculos.destroy',$vehiculo->id) }}"
+            <form 
                 method="POST">
                 @csrf
                 @method('DELETE')
@@ -259,10 +225,9 @@
                         Eliminar
                     </button>
                 </div>
-            </form>
+            </form> 
         </div>
-    </div>
-    @endforeach
+    </div> -->
 
 
     <!-- ===================== MODAL PAPELERA ===================== -->
@@ -284,26 +249,23 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($eliminados as $vehiculo)
                     <tr class="border-b">
                         <td class="px-4 py-2">
-                            {{ $vehiculo->cliente->nombre ?? '' }}
                         </td>
                         <td class="px-4 py-2">
-                            {{ $vehiculo->marca }}
                         </td>
                         <td class="px-4 py-2 text-center space-x-3">
 
-                            <form action="{{ route('vehiculos.restore',$vehiculo->id) }}"
+                            <!-- <form 
                                 method="POST" class="inline">
                                 @csrf
                                 <button
                                     class="bg-green-600 text-white px-3 py-1 rounded-lg">
                                     Restaurar
                                 </button>
-                            </form>
+                            </form> -->
 
-                            <form action="{{ route('vehiculos.forceDelete',$vehiculo->id) }}"
+                            <!-- <form 
                                 method="POST" class="inline">
                                 @csrf
                                 @method('DELETE')
@@ -311,18 +273,17 @@
                                     class="bg-red-600 text-white px-3 py-1 rounded-lg">
                                     Eliminar Definitivo
                                 </button>
-                            </form>
+                            </form> -->
 
                         </td>
                     </tr>
-                    @empty
+                    
                     <tr>
                         <td colspan="3"
                             class="text-center py-6 text-gray-400">
                             No hay vehículos eliminados
                         </td>
                     </tr>
-                    @endforelse
                 </tbody>
             </table>
 
@@ -336,5 +297,4 @@
     </div>
 
 </div>
-
 @endsection

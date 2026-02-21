@@ -19,9 +19,10 @@
 
         <!-- Logo -->
         <div class="px-6 py-5 text-white font-semibold text-lg border-b border-gray-800 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <i data-lucide="car" class="w-6 h-6 text-blue-500"></i>
-                <span x-show="open">ACOSTACARSHOP</span>
+            <div class="text-center">
+
+                <span x-show="open">CARSHOP AND SERVICES</span>
+
             </div>
 
             <button @click="open = !open">
@@ -80,6 +81,22 @@
         </span>
     </a>
 
+    <!-- Servicios -->
+    <a href="{{ route('servicios.index') }}" 
+    class="relative flex items-center gap-3 px-4 py-2 rounded-lg 
+    {{ request()->routeIs('servicios.*') ? 'bg-blue-600 text-white' : 'hover:bg-gray-800' }} group">
+
+        <i data-lucide="ClipboardList" class="w-4 h-4"></i>
+        <span x-show="open">Servicios</span>
+
+        <span 
+            x-show="!open"
+            class="absolute left-16 bg-black text-white text-xs px-2 py-1 rounded-md shadow-lg
+            opacity-0 group-hover:opacity-100 transition duration-200 whitespace-nowrap">
+            Servicios
+        </span>
+    </a>
+
 </nav>
 
 
@@ -90,7 +107,7 @@
     <div class="flex-1 flex flex-col transition-all duration-300">
 
         <!-- TOPBAR -->
-        <header class="bg-white px-8 py-4 flex justify-between items-center border-b">
+        <!-- <header class="bg-white px-8 py-4 flex justify-between items-center border-b">
 
             <input type="text"
                    placeholder="Buscar..."
@@ -115,7 +132,7 @@
 
             </div>
 
-        </header>
+        </header> -->
 
         <!-- CONTENT -->
         <main class="p-8">
