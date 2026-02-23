@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\VehiculoController;
 use App\Http\Controllers\ServicioController;
+use App\Http\Controllers\OrdenController;
 
 Route::get('/', function () {
 
@@ -42,6 +43,7 @@ Route::get('/', function () {
 
 })->name('dashboard'); // 👈 IMPORTANTE
 
+// Clientes
 Route::resource('clientes', ClienteController::class);
 
 Route::post('/clientes/{id}/restore', [ClienteController::class, 'restore'])
@@ -50,12 +52,14 @@ Route::post('/clientes/{id}/restore', [ClienteController::class, 'restore'])
 Route::delete('/clientes/{id}/force-delete', [ClienteController::class, 'forceDelete'])
     ->name('clientes.forceDelete');
 
+// Vehiculos
 Route::resource('vehiculos', VehiculoController::class);
 
 Route::post('vehiculos/{id}/restore', [VehiculoController::class,'restore'])->name('vehiculos.restore');
 
 Route::delete('vehiculos/{id}/forceDelete', [VehiculoController::class,'forceDelete'])->name('vehiculos.forceDelete');
 
+// Servicios
 Route::resource('servicios', ServicioController::class);
 
 Route::post('servicios/{id}/restore', 
@@ -64,4 +68,5 @@ Route::post('servicios/{id}/restore',
 Route::delete('servicios/{id}/force-delete', 
     [ServicioController::class, 'forceDelete'])->name('servicios.forceDelete');
 
-    
+// Orden trabajo
+Route::resource('ordenes', OrdenController::class);

@@ -22,5 +22,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
     {
         return $this->belongsTo(\App\Models\Cliente::class);
     }
-        
+    public function ordenes()
+    {
+        return $this->hasMany(Orden::class);
     }
+}

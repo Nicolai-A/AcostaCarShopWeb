@@ -96,7 +96,21 @@
             Servicios
         </span>
     </a>
+    <!-- Ordenes -->
+    <a href="{{ route('ordenes.index') }}" 
+    class="relative flex items-center gap-3 px-4 py-2 rounded-lg 
+    {{ request()->routeIs('ordenes.*') ? 'bg-blue-600 text-white' : 'hover:bg-gray-800' }} group">
 
+        <i data-lucide="ClipboardList" class="w-4 h-4"></i>
+        <span x-show="open">Ordenes</span>
+
+        <span 
+            x-show="!open"
+            class="absolute left-16 bg-black text-white text-xs px-2 py-1 rounded-md shadow-lg
+            opacity-0 group-hover:opacity-100 transition duration-200 whitespace-nowrap">
+            Ordenes
+        </span>
+    </a>
 </nav>
 
 
@@ -143,7 +157,7 @@
     </div>
 
 </div>
-
+@yield('scripts')
 </body>
 
 </html>

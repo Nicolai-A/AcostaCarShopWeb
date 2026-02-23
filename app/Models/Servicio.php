@@ -15,4 +15,12 @@ class Servicio extends Model
         'precio',
         'activo'
     ];
+
+    public function ordenes()
+    {
+        return $this->belongsToMany(Orden::class)
+                    ->withPivot('precio')
+                    ->withTimestamps();
+    }
+    
 }

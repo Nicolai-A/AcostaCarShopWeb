@@ -65,7 +65,7 @@
                         </button>
 
                         <button @click="openDelete = {{ $servicio -> id }}" class="text-red-600 hover:text-red-800">
-                            🗑️
+                        🗑️
                         </button>
                     </td>
                 </tr>
@@ -104,8 +104,8 @@
                     <input name="nombre" placeholder="Nombre"
                         class="w-full border rounded-xl px-4 py-2">
 
-                    <textarea name="descripcion" rows="3" cols="33" placeholder="Descripción"
-                        class="w-full border rounded-xl px-4 py-2"></textarea>
+                    <input name="descripcion" placeholder="Descripción"
+                        class="w-full border rounded-xl px-4 py-2"></input>
 
                     <input name="precio" placeholder="Precio"
                         class="w-full border rounded-xl px-4 py-2">

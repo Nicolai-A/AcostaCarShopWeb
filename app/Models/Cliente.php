@@ -21,23 +21,27 @@ class Cliente extends Model
         return $this->hasMany(\App\Models\Vehiculo::class);
     }
     protected static function booted()
-{
-    // Cuando se elimine (soft delete)
-    static::deleting(function ($cliente) {
+    {
+        // Cuando se elimine (soft delete)
+        static::deleting(function ($cliente) {
 
-        if ($cliente->isForceDeleting()) {
-            // Si es eliminación definitiva
-            $cliente->vehiculos()->withTrashed()->forceDelete();
-        } else {
-            // Si es soft delete
-            $cliente->vehiculos()->delete();
-        }
-    });
+            if ($cliente->isForceDeleting()) {
+                // Si es eliminación definitiva
+                $cliente->vehiculos()->withTrashed()->forceDelete();
+            } else {
+                // Si es soft delete
+                $cliente->vehiculos()->delete();
+            }
+        });
 
-    // Cuando se restaure
-    static::restoring(function ($cliente) {
-        $cliente->vehiculos()->withTrashed()->restore();
-    });
-}
+        // Cuando se restaure
+        static::restoring(function ($cliente) {
+            $cliente->vehiculos()->withTrashed()->restore();
+        });
+    }
+    public function ordenes()
+    {
+        return $this->hasMany(Orden::class);
+    }
 }
 
