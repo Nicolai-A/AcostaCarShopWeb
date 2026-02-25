@@ -72,3 +72,6 @@ Route::delete('servicios/{id}/force-delete',
 Route::resource('ordenes', OrdenController::class);
 Route::post('ordenes/{id}/restore', [OrdenController::class, 'restore'])->name('ordenes.restore');
 Route::delete('ordenes/{id}/force-delete', [OrdenController::class, 'forceDelete'])->name('ordenes.forceDelete');
+Route::get('/ordenes/{id}/pdf', [OrdenController::class, 'descargarPDF'])->name('ordenes.pdf');
+
+Route::post('/ordenes/{id}/enviar-email', [OrdenController::class, 'enviarEmail'])->name('ordenes.enviarEmail');

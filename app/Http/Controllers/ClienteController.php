@@ -72,6 +72,13 @@ use Illuminate\Http\Request;
                 'regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/'
             ],
 
+            'cedula' => [
+                'required',
+                'string', 
+                'digits_between:10,13', 
+                'unique:clientes,cedula'
+            ],
+
             'telefono' => [
                 'required',
                 'digits_between:7,15'
@@ -91,6 +98,10 @@ use Illuminate\Http\Request;
             ],
         ], [
             // MENSAJES PERSONALIZADOS
+            'cedula.required' => 'La cédula o RUC es obligatorio.',
+            'cedula.digits_between' => 'La cédula debe tener 10 dígitos y el RUC 13.',
+            'cedula.unique' => 'Esta cédula ya está registrada.',
+
             'nombre.required' => 'El nombre es obligatorio.',
             'nombre.regex' => 'El nombre solo puede contener letras.',
 
@@ -139,6 +150,7 @@ use Illuminate\Http\Request;
         $request->validate([
             'nombre' => 'required|min:3',
             'apellido' => 'required|min:3',
+            'cedula' => 'required|digits_between:10,13|unique:clientes,cedula,'.$cliente->id, // Ignora el ID actual
             'email' => 'nullable|email',
         ]);
 

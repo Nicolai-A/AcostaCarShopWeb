@@ -47,6 +47,7 @@
                     <th class="px-6 py-4">Nombre</th>
                     <th class="px-6 py-4">Teléfono</th>
                     <th class="px-6 py-4">Email</th>
+                    <th class="px-6 py-4">Cedula</th>
                     <th class="px-6 py-4">Dirección</th>
                     <th class="px-6 py-4 text-center">Vehículos</th>
                     <th class="px-6 py-4 text-center">Acciones</th>
@@ -59,11 +60,10 @@
                     x-show="('{{ strtolower($cliente->nombre.' '.$cliente->apellido.' '.$cliente->email.' '.$cliente->telefono) }}')
                         .includes(search.toLowerCase())"
                 >
-                    <td class="px-6 py-4">
-                        {{ $cliente->nombre }} {{ $cliente->apellido }}
-                    </td>
+                    <td class="px-6 py-4">{{ $cliente->nombre }} {{ $cliente->apellido }}</td>
                     <td class="px-6 py-4">{{ $cliente->telefono }}</td>
                     <td class="px-6 py-4">{{ $cliente->email }}</td>
+                    <td class="px-6 py-4">{{ $cliente->cedula }}</td>
                     <td class="px-6 py-4">{{ $cliente->direccion }}</td>
                     <td class="px-6 py-4 text-center">
     @if($cliente->vehiculos_count > 0)
@@ -93,7 +93,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="6" class="text-center py-6 text-gray-400">
+                    <td colspan="7" class="text-center py-6 text-gray-400">
                         No hay clientes registrados
                     </td>
                 </tr>
@@ -121,6 +121,7 @@
                 <div class="space-y-4">
                     <input name="nombre" placeholder="Nombre" class="w-full border rounded-xl px-4 py-2">
                     <input name="apellido" placeholder="Apellido" class="w-full border rounded-xl px-4 py-2">
+                    <input name="cedula" placeholder="Cedula" class="w-full border rounded-xl px-4 py-2">
                     <input name="telefono" placeholder="Celular" class="w-full border rounded-xl px-4 py-2">
                     <input name="email" placeholder="Email" class="w-full border rounded-xl px-4 py-2">
                     <input name="direccion" placeholder="Dirección" class="w-full border rounded-xl px-4 py-2">
@@ -157,6 +158,7 @@
                 <div class="space-y-4">
                     <input name="nombre" value="{{ $cliente->nombre }}" class="w-full border rounded-xl px-4 py-2">
                     <input name="apellido" value="{{ $cliente->apellido }}" class="w-full border rounded-xl px-4 py-2">
+                    <input name="cedula" value="{{ $cliente->cedula }}" class="w-full border rounded-xl px-4 py-2">
                     <input name="telefono" value="{{ $cliente->telefono }}" class="w-full border rounded-xl px-4 py-2">
                     <input name="email" value="{{ $cliente->email }}" class="w-full border rounded-xl px-4 py-2">
                     <input name="direccion" value="{{ $cliente->direccion }}" class="w-full border rounded-xl px-4 py-2">

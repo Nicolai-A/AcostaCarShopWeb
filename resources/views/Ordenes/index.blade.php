@@ -12,6 +12,18 @@
     filterDate: '',
 }" x-cloak>
 
+    @if(session('success'))
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-xl mb-4">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl mb-4">
+            <strong>Error:</strong> {{ session('error') }}
+        </div>
+    @endif
+
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-semibold">Gestión de Órdenes</h1>
         <div class="space-x-3">
@@ -52,10 +64,12 @@
                         <span class="text-blue-600 text-xs font-bold uppercase">{{$orden->estado}}</span>
                     </div>
                     <div class="flex gap-2">
+                        
                         <button @click="prepararEdicion({{ $orden->toJson() }})" class="text-yellow-500 hover:bg-yellow-50 p-1 rounded">✏️</button>
                         <button @click="openDelete = {{ $orden->id }}" class="text-red-600 hover:bg-red-50 p-1 rounded">🗑️</button>
                     </div>
                 </div>
+                
 
                 <h3 class="text-lg font-bold text-gray-800">{{ $orden->cliente->nombre }}</h3>            
                 <p class="text-xs text-gray-500 mb-1 font-medium">{{ $orden->vehiculo->marca }} - {{ $orden->vehiculo->placa }}</p>
@@ -76,12 +90,31 @@
                     @endif
                 </div>
 
-                <div class="flex justify-between items-end">
-                    <div>
-                        <p class="text-[10px] text-gray-400 font-bold uppercase">Cobro Total:</p>
-                        <span class="text-2xl font-black text-blue-600">${{ number_format($orden->total, 2) }}</span>
-                    </div>
-                </div>
+               <div class="border-t border-gray-100 pt-4">
+    <div class="flex justify-between items-center mb-4">
+        <div>
+            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Cobro Total:</p>
+            <span class="text-2xl font-black text-blue-600">${{ number_format($orden->total, 2) }}</span>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-2">
+        <a href="{{ route('ordenes.pdf', $orden->id) }}" 
+           target="_blank"
+           class="flex items-center justify-center gap-1 bg-gray-800 hover:bg-black text-white text-[10px] font-bold py-2 rounded-lg transition-colors uppercase">
+           <span>📄</span> PDF
+        </a>
+
+        <form action="{{ route('ordenes.enviarEmail', $orden->id) }}" method="POST">
+            @csrf
+            <button type="submit" 
+                    onclick="this.innerHTML='Enviando...'; this.classList.add('opacity-50')"
+                    class="w-full flex items-center justify-center gap-1 border-2 border-blue-500 text-blue-500 hover:bg-blue-50 font-bold text-[10px] py-[6px] rounded-lg uppercase transition-colors">
+                <span>✉️</span> Email
+            </button>
+        </form>
+    </div>
+</div>
             </div>
         @endforeach
     </div>

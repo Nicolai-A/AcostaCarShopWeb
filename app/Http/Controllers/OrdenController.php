@@ -7,6 +7,9 @@ use App\Models\Cliente;
 use App\Models\Vehiculo;
 use App\Models\Servicio;
 use App\Models\Orden;
+use Barryvdh\DomPDF\Facade\Pdf;
+use App\Mail\OrdenFacturaMail;
+use Illuminate\Support\Facades\Mail;    
 
 class OrdenController extends Controller
 {
@@ -126,6 +129,28 @@ class OrdenController extends Controller
     {
         Orden::withTrashed()->findOrFail($id)->forceDelete();
         return back()->with('success', 'Orden eliminada definitivamente');
+    }
+    public function descargarPDF($id)
+    {
+        $orden = Orden::with(['cliente', 'vehiculo', 'servicios'])->findOrFail($id);
+        
+        // Cargamos la vista y le pasamos la variable $orden
+        $pdf = Pdf::loadView('ordenes.pdf', compact('orden'));
+        
+        // Esto descargará el archivo directamente en tu navegador
+        return $pdf->download('orden_trabajo_'.$orden->id.'.pdf');
+    }
+    public function enviarEmail($id)
+    {
+        try {
+            $orden = Orden::with(['cliente', 'vehiculo', 'servicios'])->findOrFail($id);
+            Mail::to($orden->cliente->email)->send(new \App\Mail\OrdenFacturaMail($orden));
+            
+            return back()->with('success', 'Email enviado');
+        } catch (\Exception $e) {
+            // Esto te dirá exactamente qué falló si hay un error
+            return back()->with('error', 'Error al enviar: ' . $e->getMessage());
+        }
     }
     
 }
