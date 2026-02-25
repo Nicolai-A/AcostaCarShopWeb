@@ -3,80 +3,106 @@
 @section('content')
 
 <div x-data="{ 
+    ...ordenApp(), 
     openCreate: {{ $errors->any() ? 'true' : 'false' }},
     openEdit: null,
     openDelete: null,
     openTrash: false,
     search: '',
-    searchTrash: ''
-}">
+    filterDate: '',
+}" x-cloak>
 
-    <!-- HEADER -->
     <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-semibold">Lista de ordenes</h1>
-
+        <h1 class="text-2xl font-semibold">Gestión de Órdenes</h1>
         <div class="space-x-3">
-            <button @click="openTrash = true"
-                class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-xl">
+            <button @click="openTrash = true" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-xl transition-colors">
                 Ver Eliminados
             </button>
-
-            <button @click="openCreate = true"
-                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl">
+            <button @click="openCreate = true" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl transition-colors">
                 + Nueva orden
             </button>
         </div>
     </div>
 
-    <!-- BUSCADOR -->
-    <div class="mb-4">
-        <input type="text"
-            x-model="search"
-            placeholder="Buscar orden..."
-            class="w-full md:w-1/3 border rounded-xl px-4 py-2">
+    <div class="flex flex-col md:flex-row gap-4 mb-6">
+        <div class="flex-1">
+            <label class="block text-xs text-gray-500 mb-1 ml-1">Buscar por cliente o placa</label>
+            <input type="text" x-model="search" placeholder="Ej: Juan Pérez o ABC-123..." 
+                class="w-full border rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+        <div class="w-full md:w-48">
+            <label class="block text-xs text-gray-500 mb-1 ml-1">Filtrar por fecha</label>
+            <input type="date" x-model="filterDate" 
+                class="w-full border rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+        <div class="flex items-end">
+            <button @click="search = ''; filterDate = ''" class="text-sm text-blue-600 hover:underline mb-2">
+                Limpiar filtros
+            </button>
+        </div>
     </div>
 
-    
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
+        @foreach($ordenes as $orden)
+            <div x-show="cumpleFiltros('{{ strtolower($orden->cliente?->nombre ?? 'Sin Cliente') }}', '{{ strtolower($orden->vehiculo?->placa ?? 'Sin Placa') }}', '{{ \Carbon\Carbon::parse($orden->fecha)->format('Y-m-d') }}')"
+                class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                
+                <div class="flex justify-between mb-3">
+                    <div class="bg-blue-100 px-3 py-1 rounded-lg">
+                        <span class="text-blue-600 text-xs font-bold uppercase">{{$orden->estado}}</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <button @click="prepararEdicion({{ $orden->toJson() }})" class="text-yellow-500 hover:bg-yellow-50 p-1 rounded">✏️</button>
+                        <button @click="openDelete = {{ $orden->id }}" class="text-red-600 hover:bg-red-50 p-1 rounded">🗑️</button>
+                    </div>
+                </div>
 
-    <!-- PAGINACIÓN -->
-    <div class="mt-6">
+                <h3 class="text-lg font-bold text-gray-800">{{ $orden->cliente->nombre }}</h3>            
+                <p class="text-xs text-gray-500 mb-1 font-medium">{{ $orden->vehiculo->marca }} - {{ $orden->vehiculo->placa }}</p>
+                <p class="text-xs text-gray-400 mb-4">📅 {{ \Carbon\Carbon::parse($orden->fecha)->format('d/m/Y') }}</p>
+
+                <div class="bg-gray-50 rounded-lg p-3 mb-4 border border-gray-100">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Gasto en Repuestos:</span>
+                        <span class="text-sm font-bold text-red-500">-${{ number_format($orden->costo_insumos, 2) }}</span>
+                    </div>
+                    
+                    @if($orden->notas_insumos)
+                        <p class="text-[11px] text-gray-600 italic line-clamp-2">
+                            <span class="font-bold text-gray-400">📝</span> {{ $orden->notas_insumos }}
+                        </p>
+                    @else
+                        <p class="text-[11px] text-gray-300 italic">Sin notas de repuestos</p>
+                    @endif
+                </div>
+
+                <div class="flex justify-between items-end">
+                    <div>
+                        <p class="text-[10px] text-gray-400 font-bold uppercase">Cobro Total:</p>
+                        <span class="text-2xl font-black text-blue-600">${{ number_format($orden->total, 2) }}</span>
+                    </div>
+                </div>
+            </div>
+        @endforeach
     </div>
 
-
-    <!-- ===================== MODAL CREAR ===================== -->
-    <div x-show="openCreate"
-        class="fixed inset-0 flex items-center justify-center z-50">
-
-        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            @click="openCreate=false"></div>
-
-        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-3xl z-50" x-data="ordenApp()">
-            <h2 class="text-xl font-semibold mb-6">Nuevo Vehículo</h2>
-
+    <div x-show="openCreate" class="fixed inset-0 flex items-center justify-center z-50">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="openCreate=false"></div>
+        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-3xl z-50 overflow-y-auto max-h-[90vh]">
+            <h2 class="text-xl font-semibold mb-6">Nueva Orden de Trabajo</h2>
             <form action="{{ route('ordenes.store') }}" method="POST">
                 @csrf
-
-                <div class="bg-white rounded-2xl shadow p-8 space-y-6">
-
-                    <!-- FILA 1: CLIENTE Y VEHICULO -->
-                    <div class="flex gap-3 w-full mb-5">
-
-                        <!-- Seleccionar Cliente -->
-                        <div class="flex-1 ">
+                <div class="space-y-6">
+                    <div class="flex gap-3">
+                        <div class="flex-1">
                             <label class="block text-sm mb-1">Cliente</label>
-                            <select name="cliente_id" x-model="cliente_id"
-                                    @change="filtrarVehiculos"
-                                    class="w-full border rounded-xl px-4 py-2">
+                            <select name="cliente_id" x-model="cliente_id" @change="filtrarVehiculos" class="w-full border rounded-xl px-4 py-2">
                                 <option value="">Seleccionar cliente...</option>
                                 @foreach($clientes as $cliente)
-                                    <option value="{{ $cliente->id }}">
-                                        {{ $cliente->nombre }}
-                                    </option>
+                                    <option value="{{ $cliente->id }}">{{ $cliente->nombre }}</option>
                                 @endforeach
                             </select>
                         </div>
-
-                        <!-- Seleccionar Vehículo -->
                         <div class="flex-1">
                             <label class="block text-sm mb-1">Vehículo</label>
                             <select x-model="vehiculo_id" name="vehiculo_id" class="w-full border rounded-xl px-4 py-2">
@@ -86,315 +112,348 @@
                                 </template>
                             </select>
                         </div>
-
                     </div>
-
-                    <!-- FILA 2: FECHA Y SERVICIO -->
-                    <div class="flex gap-3 mb-5 w-full">
-
-                        <!-- Fecha -->
+                    <div class="flex gap-3">
                         <div class="flex-1">
-                            <label class="block text-sm mb-1">Fecha</label>
-                            <input type="date" name="fecha"
-                                x-model="fecha"
-                                class="w-full border rounded-xl px-4 py-2">
+                            <label class="block text-sm mb-1">Fecha de la Orden</label>
+                            <input type="date" name="fecha" x-model="fecha" class="w-full border rounded-xl px-4 py-2">
                         </div>
-
-                        <!-- Seleccionar Servicio -->
                         <div class="flex-1">
-                            <label class="block text-sm mb-1">Agregar Servicio</label>
-                            <select @change="agregarServicio($event)"
-                                    class="w-full border rounded-xl px-4 py-2">
+                            <label class="block text-sm mb-1">Añadir Servicio</label>
+                            <select @change="agregarServicio($event)" class="w-full border rounded-xl px-4 py-2">
                                 <option value="">Seleccionar servicio...</option>
                                 @foreach($servicios as $servicio)
-                                    <option value="{{ $servicio->id }}"
-                                            data-precio="{{ $servicio->precio }}"
-                                            data-nombre="{{ $servicio->nombre }}">
-                                        {{ $servicio->nombre }}
+                                    <option value="{{ $servicio->id }}" data-precio="{{ $servicio->precio }}" data-nombre="{{ $servicio->nombre }}">
+                                        {{ $servicio->nombre }} (${{ $servicio->precio }})
                                     </option>
                                 @endforeach
                             </select>
                         </div>
-
                     </div>
-
-                    <!-- SERVICIOS AGREGADOS -->
-                    <div class="space-y-2">
+                    <div class="space-y-2 border-t pt-4">
                         <template x-for="(servicio, index) in serviciosSeleccionados" :key="index">
-                            <div class="flex justify-between items-center bg-blue-50 px-4 py-3 rounded-xl">
-                                <div>
-                                    <p class="font-medium" x-text="servicio.nombre"></p>
-                                    <p class="text-sm text-gray-600">
-                                        $ <span x-text="servicio.precio"></span>
-                                    </p>
-                                    <input type="hidden" :name="'servicios['+index+'][id]'" :value="servicio.id">
-                                    <input type="hidden" :name="'servicios['+index+'][precio]'" :value="servicio.precio">
+                            <div class="flex justify-between items-center bg-blue-50 px-4 py-2 rounded-xl">
+                                <span x-text="servicio.nombre" class="text-sm"></span>
+                                <div class="flex items-center gap-4">
+                                    <span class="text-sm font-bold">$<span x-text="servicio.precio"></span></span>
+                                    <button @click.prevent="eliminarServicio(index)" class="text-red-500">🗑</button>
                                 </div>
-
-                                <button @click.prevent="eliminarServicio(index)" type="button
-                                        class="text-red-500 hover:text-red-700">
-                                    🗑
-                                </button>
+                                <input type="hidden" :name="'servicios['+index+'][id]'" :value="servicio.id">
+                                <input type="hidden" :name="'servicios['+index+'][precio]'" :value="servicio.precio">
                             </div>
                         </template>
                     </div>
-
-                    <!-- TOTAL -->
-                    <div class="flex justify-between items-center text-lg font-semibold mt-6">
-                        <span>Total Automático:</span>
-                        <span class="text-blue-600">
-                            $ <span x-text="total"></span>
-                        </span>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4">
+                        <div>
+                            <label class="block text-sm font-medium text-red-600 mb-1">Gasto en Repuestos ($)</label>
+                            <input type="number" name="costo_insumos" x-model.number="costo_insumos" step="0.01"
+                                class="w-full border rounded-xl px-4 py-2 focus:ring-2 focus:ring-red-500 outline-none" 
+                                placeholder="0.00">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Detalle de Repuestos</label>
+                            <textarea name="notas_insumos" x-model="notas_insumos" rows="1"
+                                class="w-full border rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-blue-500" 
+                                placeholder="Ej: Filtro de aceite, pastillas..."></textarea>
+                        </div>
+                    </div>
+                    <div class="text-right font-bold text-2xl text-blue-600 pt-4">
+                        Total: $<span x-text="total"></span>
                         <input type="hidden" name="total" :value="total">
                     </div>
                 </div>
-                
-                <div class="flex justify-end gap-4 mt-6">
-                    <button type="button"
-                        @click="openCreate=false"
-                        class="px-4 py-2 border rounded-xl">
-                        Cancelar
+                <div class="flex justify-end gap-4 mt-8">
+                    <button type="button" @click="openCreate=false" class="px-4 py-2 border rounded-xl">Cancelar</button>
+                    <button type="submit" 
+                            :disabled="total <= 0"
+                            :class="total <= 0 ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'"
+                            class="text-white px-8 py-2 rounded-xl font-bold transition-colors">
+                        Crear Orden
                     </button>
-                    <!-- BOTON -->
-                        <button :disabled="serviciosSeleccionados.length === 0"
-                            class=" bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold">
-                            Crear Orden de Trabajo
-                        </button>
                 </div>
             </form>
         </div>
     </div>
 
-    <div class="grid grid-cols-3 gap-4 w-full">
-        @foreach($ordenes as $orden)
-        <div class="bg-gray-50 rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-            <div class="flex justify-between mb-3">
-                <div class="bg-blue-100 p-2 rounded-lg">
-                    <span class="text-blue-600 text-sm">{{$orden->estado}}</span>
+    <div x-show="openEdit" class="fixed inset-0 flex items-center justify-center z-50">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="openEdit = null"></div>
+        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-3xl z-50 overflow-y-auto max-h-[90vh]">
+            <h2 class="text-xl font-semibold mb-6">Editar Orden de Trabajo</h2>
+            <form :action="'{{ route('ordenes.index') }}/' + openEdit" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="space-y-6">
+                    <div class="flex gap-3">
+                        <div class="flex-1">
+                            <label class="block text-sm mb-1">Cliente (No editable)</label>
+                            <select x-model="cliente_id" class="w-full border rounded-xl px-4 py-2 bg-gray-100" disabled>
+                                @foreach($clientes as $cliente)
+                                    <option value="{{ $cliente->id }}">{{ $cliente->nombre }}</option>
+                                @endforeach
+                            </select>
+                            <input type="hidden" name="cliente_id" :value="cliente_id">
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-sm mb-1">Vehículo</label>
+                            <select name="vehiculo_id" x-model="vehiculo_id" class="w-full border rounded-xl px-4 py-2">
+                                <template x-for="v in vehiculosFiltrados" :key="v.id">
+                                    <option :value="v.id" x-text="v.marca + ' - ' + v.placa"></option>
+                                </template>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <div class="flex-1">
+                            <label class="block text-sm mb-1">Fecha</label>
+                            <input type="date" name="fecha" x-model="fecha" class="w-full border rounded-xl px-4 py-2">
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-sm mb-1">Añadir más Servicios</label>
+                            <select @change="agregarServicio($event)" class="w-full border rounded-xl px-4 py-2">
+                                <option value="">Seleccionar servicio...</option>
+                                @foreach($servicios as $servicio)
+                                    <option value="{{ $servicio->id }}" data-precio="{{ $servicio->precio }}" data-nombre="{{ $servicio->nombre }}">
+                                        {{ $servicio->nombre }} (${{ $servicio->precio }})
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="space-y-2 border-t pt-4">
+                        <template x-for="(servicio, index) in serviciosSeleccionados" :key="index">
+                            <div class="flex justify-between items-center bg-yellow-50 px-4 py-2 rounded-xl">
+                                <span x-text="servicio.nombre" class="text-sm"></span>
+                                <div class="flex items-center gap-4">
+                                    <span class="text-sm font-bold">$<span x-text="servicio.precio"></span></span>
+                                    <button @click.prevent="eliminarServicio(index)" class="text-red-500">🗑</button>
+                                </div>
+                                <input type="hidden" :name="'servicios['+index+'][id]'" :value="servicio.id">
+                                <input type="hidden" :name="'servicios['+index+'][precio]'" :value="servicio.precio">
+                            </div>
+                        </template>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4">
+                        <div>
+                            <label class="block text-sm font-medium text-red-600 mb-1">Gasto en Repuestos ($)</label>
+                            <input type="number" name="costo_insumos" x-model.number="costo_insumos" step="0.01"
+                                class="w-full border rounded-xl px-4 py-2 focus:ring-2 focus:ring-red-500 outline-none" 
+                                placeholder="0.00">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Detalle de Repuestos</label>
+                            <textarea name="notas_insumos" x-model="notas_insumos" rows="1"
+                                class="w-full border rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-blue-500" 
+                                placeholder="Ej: Filtro de aceite, pastillas..."></textarea>
+                        </div>
+                    </div>
+                    <div class="text-right font-bold text-2xl text-blue-600 pt-4">
+                        Total Actualizado: $<span x-text="total"></span>
+                        <input type="hidden" name="total" :value="total">
+                    </div>
                 </div>
-                <div class="grid grid-cols-2 gap-4 ">
-                    <button class="text-yellow-500 hover:text-yellow-700 text-sm">
-                        ✏️
-                    </button>
-                    <button class="text-red-600 hover:text-red-800 text-sm">
-                        🗑️
-                    </button>
+                <div class="flex justify-end gap-4 mt-8">
+                    <button type="button" @click="openEdit = null" class="px-4 py-2 border rounded-xl">Cancelar</button>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2 rounded-xl font-bold transition-colors">Actualizar Orden</button>
                 </div>
-            </div>
-            <h3 class="w-fit text-lg font-semibold ">{{ $orden->cliente->nombre }}</h3>            
-            <p class="text-xs text-gray-500 mb-2">{{ $orden->vehiculo->marca }} - {{ $orden->vehiculo->placa }}</p>
-            <span class="text-blue-600 text-2xl font-bold">${{ number_format($orden->total, 2) }}</span>
+            </form>
         </div>
-        @endforeach
+    </div>
+
+    <div x-show="openDelete" class="fixed inset-0 flex items-center justify-center z-50" x-cloak>
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="openDelete = null"></div>
+        <div class="bg-white rounded-2xl p-8 w-full max-w-md z-50 text-center">
+            <div class="text-red-500 mb-4 text-5xl">⚠️</div>
+            <h2 class="text-lg font-semibold mb-2">¿Enviar a la papelera?</h2>
+            <p class="text-gray-500 text-sm mb-6">La orden podrá ser restaurada desde la sección de eliminados.</p>
+            <form :action="'{{ route('ordenes.index') }}/' + openDelete" method="POST">
+                    @csrf
+                    @method('DELETE')
+                <div class="flex justify-center gap-4">
+                    <button type="button" @click="openDelete = null" class="flex-1 px-4 py-2 border rounded-xl">Cancelar</button>
+                    <button type="submit" class="flex-1 bg-red-600 text-white px-6 py-2 rounded-xl font-bold">Eliminar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div x-show="openTrash" class="fixed inset-0 flex items-center justify-center z-50" x-cloak>
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="openTrash=false"></div>
+        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-4xl z-50">
+            <h2 class="text-xl font-semibold mb-6">Órdenes Eliminadas</h2>
+            <div class="overflow-y-auto max-h-[60vh]">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-50 text-xs uppercase">
+                        <tr>
+                            <th class="px-4 py-2 text-left">Cliente</th>
+                            <th class="px-4 py-2 text-left">Vehículo</th>
+                            <th class="px-4 py-2 text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($ordenesEliminadas as $orden)
+                        <tr class="border-b">
+                            <td class="px-4 py-2">{{ $orden->cliente->nombre ?? 'N/A' }}</td>
+                            <td class="px-4 py-2">{{ $orden->vehiculo->placa ?? 'N/A' }}</td>
+                            <td class="px-4 py-2 text-center space-x-2">
+                                <form action="{{ route('ordenes.restore', $orden->id) }}" method="POST" class="inline">
+                                    @csrf
+                                    <button class="bg-green-600 text-white px-3 py-1 rounded-lg text-xs font-bold">Restaurar</button>
+                                </form>
+                                <form action="{{ route('ordenes.forceDelete', $orden->id) }}" method="POST" class="inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-bold">Eliminar Definitivo</button>
+                                </form>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="3" class="text-center py-6 text-gray-400">No hay órdenes eliminadas</td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+            <div class="flex justify-end mt-6">
+                <button @click="openTrash=false" class="px-4 py-2 border rounded-xl">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white border border-blue-100 rounded-2xl p-6 mb-6 shadow-sm">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="border-r border-gray-100 pr-6">
+            <p class="text-sm text-gray-500 font-medium uppercase tracking-wider">Ingresos Totales (Ventas):</p>
+            <div class="flex items-baseline gap-2">
+                <span class="text-3xl font-black text-blue-600">$<span x-text="formatearMoneda(totalVentasBrutas())"></span></span>
+            </div>
+            <p class="text-xs text-gray-400 mt-1">Dinero total recibido de clientes</p>
+        </div>
+
+        <div class="pl-0 md:pl-6 text-right md:text-left">
+            <p class="text-sm text-gray-500 font-medium uppercase tracking-wider">Utilidad Real (Ganancia):</p>
+            <div class="flex items-baseline gap-2 md:justify-start justify-end">
+                <span class="text-3xl font-black text-green-600">$<span x-text="formatearMoneda(gananciasTotales())"></span></span>
+            </div>
+            <p class="text-xs text-green-500 mt-1 font-medium">Lo que queda tras restar repuestos</p>
+        </div>
     </div>
     
 
-
-    <!-- ===================== MODAL EDITAR ===================== -->
-
-    <!-- <div 
-        class="fixed inset-0 flex items-center justify-center z-50">
-
-        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            @click="openEdit=null"></div>
-
-        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-lg z-50">
-            <h2 class="text-xl font-semibold mb-6">Editar Vehículo</h2>
-
-            <form "
-                method="POST">
-                @csrf
-                @method('PUT')
-
-                <div class="space-y-4">
-
-                    <select name="cliente_id"
-                        class="w-full border rounded-xl px-4 py-2">
-                    </select>
-
-                    <input name="marca"
-                        class="w-full border rounded-xl px-4 py-2">
-
-                    <input name="modelo"
-                        class="w-full border rounded-xl px-4 py-2">
-
-                    <input name="anio"
-                        class="w-full border rounded-xl px-4 py-2">
-
-                    <input name="placa"
-                        class="w-full border rounded-xl px-4 py-2">
-
-                    <input name="color"
-                        class="w-full border rounded-xl px-4 py-2">
-
-                </div>
-
-                <div class="flex justify-end gap-4 mt-6">
-                    <button type="button"
-                        @click="openEdit=null"
-                        class="px-4 py-2 border rounded-xl">
-                        Cancelar
-                    </button>
-
-                    <button
-                        class="bg-yellow-500 text-white px-6 py-2 rounded-xl">
-                        Actualizar
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div> -->
+@section('scripts')
+<script>
+function ordenApp() {
+    return {
+        cliente_id: '',
+        vehiculo_id: '',
+        fecha: new Date().toLocaleDateString('sv-SE'),
+        serviciosSeleccionados: [],
+        vehiculos: @json($vehiculos),
+        vehiculosFiltrados: [],
+        total: 0,
+        costo_insumos: 0,
+        notas_insumos: '',
 
 
-    <!-- ===================== MODAL ELIMINAR ===================== -->
+        gananciasTotales() {
+            let sumaNeto = 0;
+            const todasLasOrdenes = @json($ordenes);
+            
+            todasLasOrdenes.forEach(orden => {
+                const nombreC = (orden.cliente?.nombre || '').toLowerCase();
+                const placaV = (orden.vehiculo?.placa || '').toLowerCase();
+                let fechaO = orden.fecha;
+                if (fechaO && fechaO.includes('T')) fechaO = fechaO.split('T')[0];
 
-    <!-- <div 
-        class="fixed inset-0 flex items-center justify-center z-50">
+                if (this.cumpleFiltros(nombreC, placaV, fechaO)) {
+                    // CÁLCULO: Ingreso Total - Costo de Insumos
+                    let ingreso = parseFloat(orden.total || 0);
+                    let gasto = parseFloat(orden.costo_insumos || 0);
+                    sumaNeto += (ingreso - gasto);
+                }
+            });
+            return sumaNeto;
+        },
+        formatearMoneda(valor) {
+            return new Intl.NumberFormat('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(valor);
+        },
+        cumpleFiltros(cliente, placa, fechaOrden) {
+            const textoBusqueda = this.search.toLowerCase();
+            const coincideTexto = cliente.includes(textoBusqueda) || placa.includes(textoBusqueda);
+            
+            // Limpiamos la fecha de la orden por si acaso
+            const fechaLimpia = (fechaOrden || '').split(' ')[0].split('T')[0];
+            
+            const coincideFecha = this.filterDate === '' || fechaLimpia === this.filterDate;
+            
+            return coincideTexto && coincideFecha;
+        },
 
-        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            @click="openDelete=null"></div>
+        filtrarVehiculos() {
+            this.vehiculosFiltrados = this.vehiculos.filter(v => v.cliente_id == this.cliente_id);
+        },
 
-        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md z-50 text-center">
-            <h2 class="text-lg font-semibold mb-6">
-                ¿Eliminar esta orden?
-            </h2>
+        prepararEdicion(orden) {
+            this.cliente_id = orden.cliente_id;
+            this.filtrarVehiculos();
+            this.$nextTick(() => { this.vehiculo_id = orden.vehiculo_id; });
+            this.fecha = orden.fecha;
+            
+            // CARGAR ESTOS CAMPOS NUEVOS:
+            this.costo_insumos = orden.costo_insumos || 0;
+            this.notas_insumos = orden.notas_insumos || '';
+            
+            this.serviciosSeleccionados = orden.servicios.map(s => ({
+                id: s.id,
+                nombre: s.nombre,
+                precio: parseFloat(s.pivot ? s.pivot.precio : s.precio)
+            }));
+            this.calcularTotal();
+            this.openEdit = orden.id;
+        },
 
-            <form 
-                method="POST">
-                @csrf
-                @method('DELETE')
+        agregarServicio(event) {
+            let option = event.target.selectedOptions[0];
+            if (!option.value) return;
+            if (this.serviciosSeleccionados.some(s => s.id == option.value)) return;
+            this.serviciosSeleccionados.push({
+                id: option.value,
+                nombre: option.dataset.nombre,
+                precio: parseFloat(option.dataset.precio)
+            });
+            this.calcularTotal();
+            event.target.value = '';
+        },
 
-                <div class="flex justify-center gap-4">
-                    <button type="button"
-                        @click="openDelete=null"
-                        class="px-4 py-2 border rounded-xl">
-                        Cancelar
-                    </button>
+        eliminarServicio(index) {
+            this.serviciosSeleccionados.splice(index, 1);
+            this.calcularTotal();
+        },
 
-                    <button
-                        class="bg-red-600 text-white px-6 py-2 rounded-xl">
-                        Eliminar
-                    </button>
-                </div>
-            </form> 
-        </div>
-    </div> -->
+        calcularTotal() {
+            this.total = this.serviciosSeleccionados.reduce((sum, s) => sum + s.precio, 0);
+        },
+        // Añade esto dentro de tu return en ordenApp()
+        totalVentasBrutas() {
+            let sumaBruta = 0;
+            const todasLasOrdenes = @json($ordenes);
+            todasLasOrdenes.forEach(orden => {
+                const nombreC = (orden.cliente?.nombre || '').toLowerCase();
+                const placaV = (orden.vehiculo?.placa || '').toLowerCase();
+                let fechaO = orden.fecha;
+                if (fechaO && fechaO.includes('T')) fechaO = fechaO.split('T')[0];
 
-
-    <!-- ===================== MODAL PAPELERA ===================== -->
-    <div x-show="openTrash"
-        class="fixed inset-0 flex items-center justify-center z-50">
-
-        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            @click="openTrash=false"></div>
-
-        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-3xl z-50">
-            <h2 class="text-xl font-semibold mb-6">Vehículos Eliminados</h2>
-
-            <table class="w-full text-sm">
-                <thead class="bg-gray-50 text-xs uppercase">
-                    <tr>
-                        <th class="px-4 py-2">Cliente</th>
-                        <th class="px-4 py-2">Marca</th>
-                        <th class="px-4 py-2 text-center">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr class="border-b">
-                        <td class="px-4 py-2">
-                        </td>
-                        <td class="px-4 py-2">
-                        </td>
-                        <td class="px-4 py-2 text-center space-x-3">
-
-                            <!-- <form 
-                                method="POST" class="inline">
-                                @csrf
-                                <button
-                                    class="bg-green-600 text-white px-3 py-1 rounded-lg">
-                                    Restaurar
-                                </button>
-                            </form> -->
-
-                            <!-- <form 
-                                method="POST" class="inline">
-                                @csrf
-                                @method('DELETE')
-                                <button
-                                    class="bg-red-600 text-white px-3 py-1 rounded-lg">
-                                    Eliminar Definitivo
-                                </button>
-                            </form> -->
-
-                        </td>
-                    </tr>
-                    
-                    <tr>
-                        <td colspan="3"
-                            class="text-center py-6 text-gray-400">
-                            No hay ordenes eliminadas
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <div class="flex justify-end mt-6">
-                <button @click="openTrash=false"
-                    class="px-4 py-2 border rounded-xl">
-                    Cerrar
-                </button>
-            </div>
-        </div>
-    </div>
-
-</div>
-    @section('scripts')
-    <script>
-    function ordenApp() {
-        return {
-            cliente_id: '',
-            vehiculo_id: '',
-            fecha: new Date().toLocaleDateString('sv-SE'),
-            serviciosSeleccionados: [],
-            vehiculos: @json($vehiculos),
-            vehiculosFiltrados: [],
-            total: 0,
-
-            filtrarVehiculos() {
-                this.vehiculosFiltrados = this.vehiculos
-                    .filter(v => v.cliente_id == this.cliente_id);
-            },
-
-            agregarServicio(event) {
-                let option = event.target.selectedOptions[0];
-
-                if (!option.value) return;
-
-                let id = option.value;
-
-                if (this.serviciosSeleccionados.some(s => s.id == id))
-                    return;
-
-                this.serviciosSeleccionados.push({
-                    id: id,
-                    nombre: option.dataset.nombre,
-                    precio: parseFloat(option.dataset.precio)
-                });
-
-                this.calcularTotal();
-            },
-
-            eliminarServicio(index) {
-                this.serviciosSeleccionados.splice(index,1);
-                this.calcularTotal();
-            },
-
-            calcularTotal() {
-                this.total = this.serviciosSeleccionados
-                    .reduce((sum,s) => sum + s.precio,0);
-            }
+                if (this.cumpleFiltros(nombreC, placaV, fechaO)) {
+                    sumaBruta += parseFloat(orden.total || 0);
+                }
+            });
+            return sumaBruta;
         }
     }
-    </script>
-    @endsection
+}
+</script>
+@endsection
 @endsection
