@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\VehiculoController;
+use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\ServicioController;
 use App\Http\Controllers\OrdenController;
 
@@ -75,3 +76,7 @@ Route::delete('ordenes/{id}/force-delete', [OrdenController::class, 'forceDelete
 Route::get('/ordenes/{id}/pdf', [OrdenController::class, 'descargarPDF'])->name('ordenes.pdf');
 
 Route::post('/ordenes/{id}/enviar-email', [OrdenController::class, 'enviarEmail'])->name('ordenes.enviarEmail');
+
+
+//productos
+Route::resource('productos', ProductoController::class);
