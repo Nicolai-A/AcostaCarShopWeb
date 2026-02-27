@@ -3,7 +3,7 @@
 @section('content')
 <div x-data="{ openCreate: false, openEdit: null, search: '' }">
     <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-semibold">Inventario / Repuestos</h1>
+        <h1 class="text-2xl font-semibold">Inventario</h1>
         <button @click="openCreate = true" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl">
             + Nuevo Producto
         </button>
@@ -54,7 +54,7 @@
                 @csrf
                 <div class="space-y-4">
                     <div>
-                        <label class="text-xs text-gray-500">Nombre del Repuesto/Insumo</label>
+                        <label class="text-xs text-gray-500">Nombre del producto</label>
                         <input name="nombre" class="w-full border rounded-xl px-4 py-2" required>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
@@ -92,7 +92,7 @@
                 </div>
                 <div class="flex justify-end gap-4 mt-6">
                     <button type="button" @click="openEdit=null" class="px-4 py-2 border rounded-xl">Cancelar</button>
-                    <button class="bg-yellow-500 text-white px-6 py-2 rounded-xl">Actualizar</button>
+                    <button class="bg-blue-500 text-white px-6 py-2 rounded-xl">Actualizar</button>
                 </div>
             </form>
         </div>

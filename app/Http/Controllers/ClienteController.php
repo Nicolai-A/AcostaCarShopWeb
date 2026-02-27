@@ -91,9 +91,9 @@ use Illuminate\Http\Request;
             ],
 
             'direccion' => [
-                'required',
+                'nullable',
                 'string',
-                'min:5',
+                'min:2',
                 'max:150'
             ],
         ], [
@@ -115,7 +115,7 @@ use Illuminate\Http\Request;
             'email.email' => 'Debe ingresar un email válido.',
 
             'direccion.required' => 'La dirección es obligatoria.',
-            'direccion.min' => 'La dirección debe tener mínimo 5 caracteres.'
+            'direccion.min' => 'La dirección debe tener mínimo 3 caracteres.'
         ]);
 
         Cliente::create($validated);

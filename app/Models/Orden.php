@@ -31,6 +31,14 @@ class Orden extends Model
                     ->withPivot('precio')
                     ->withTimestamps();
     } 
+    // ... otros métodos ...
+
+    public function productos()
+    {
+        return $this->belongsToMany(Producto::class, 'orden_producto')
+                    ->withPivot('cantidad', 'precio_unitario', 'cobrar') // Añadir 'cobrar'
+                    ->withTimestamps();
+    }
 
 
     

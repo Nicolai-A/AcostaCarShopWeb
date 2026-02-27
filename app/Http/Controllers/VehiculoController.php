@@ -37,7 +37,7 @@ class VehiculoController extends Controller
             'cliente_id' => 'required|exists:clientes,id',
             'marca' => 'required|string|max:50',
             'modelo' => 'required|string|max:50',
-            'anio' => 'required|digits:4|integer|min:1900|max:' . date('Y'),
+            'anio' => 'required|digits:4|integer|min:1600|max:' . date('Y'),
             'placa' => 'required|string|max:20|unique:vehiculos',
             'color' => 'nullable|string|max:30',
         ]);

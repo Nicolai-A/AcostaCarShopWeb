@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Cliente;
 use App\Models\Vehiculo;
+use App\Models\Producto;
 use App\Models\Servicio;
 use App\Models\Orden;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -18,6 +19,7 @@ class OrdenController extends Controller
         $ordenes = Orden::with([
             'cliente' => fn($q) => $q->withTrashed(), 
             'vehiculo' => fn($q) => $q->withTrashed(),
+            'productos',
             'servicios'
         ])->get();
         $clientes = Cliente::with('vehiculos')->get();
@@ -37,15 +39,17 @@ class OrdenController extends Controller
         $clientes = Cliente::with('vehiculos')->get();
         $servicios = Servicio::all();
         $vehiculos = Vehiculo::all();
+        $productos = Producto::where('stock', '>', 0)->get(); // Cargar productos con stock
 
-        return view('ordenes.create', compact('clientes','servicios','vehiculos'));
+        return view('ordenes.create', compact('clientes','servicios','vehiculos', 'productos'));
     }
 
     public function store(Request $request)
     {
         $validated=$request->validate([
             'cliente_id'=>'required|exists:clientes,id',
-            'servicios'   => 'required|array|min:1',
+            'servicios'   => 'nullable|array',
+            'productos'  => 'nullable|array',
             'vehiculo_id' => 'required|exists:vehiculos,id',
             'fecha' => 'required|date',
             'total' => 'required|numeric|min:0.01',
@@ -63,11 +67,29 @@ class OrdenController extends Controller
             'notas_insumos' => $request->notas_insumos,
         ]);
 
-        foreach ($request->servicios as $servicio) {
-            $orden->servicios()->attach($servicio['id'], [
-                'precio' => $servicio['precio']
-            ]);
+        if ($request->has('servicios') && is_array($request->servicios)) {
+            foreach ($request->servicios as $servicio) {
+                $orden->servicios()->attach($servicio['id'], [
+                    'precio' => $servicio['precio']
+                ]);
+            }
         }
+        if ($request->has('productos')) {
+            foreach ($request->productos as $prodData) {
+            $producto = Producto::find($prodData['id']);
+            
+            if ($producto && $producto->stock >= $prodData['cantidad']) {
+                $orden->productos()->attach($prodData['id'], [
+                    'cantidad' => $prodData['cantidad'],
+                    'precio_unitario' => $prodData['precio'],
+                    // Guardar si se cobra o no, por defecto true si no viene en el request
+                    'cobrar' => isset($prodData['cobrar']) ? true : false, 
+                ]);
+
+                $producto->decrement('stock', $prodData['cantidad']);
+            }
+        }
+    }
 
         return redirect()->route('ordenes.index')
             ->with('Success','Orden registrado correctamente');
@@ -89,29 +111,68 @@ class OrdenController extends Controller
             'vehiculo_id' => 'required|exists:vehiculos,id',
             'fecha' => 'required|date',
             'total' => 'required|numeric',
-            'servicios' => 'required|array|min:1',
+            //'servicios' => 'required|array|min:1',
             'costo_insumos' => 'nullable|numeric|min:0',
             'notas_insumos' => 'nullable|string',
         ]);
         
         $orden = Orden::findOrFail($id);
-        
-        $orden->update([
-            'vehiculo_id' => $request->vehiculo_id,
-            'fecha' => $request->fecha, // No olvides actualizar la fecha si se cambió
-            'total' => $request->total,
-            'costo_insumos' => $request->costo_insumos ?? 0,
-            'notas_insumos' => $request->notas_insumos,
-        ]);
 
+    // 1. --- LOGICA DE STOCK PARA PRODUCTOS ---
+
+    // A. Revertir stock de los productos actuales antes de actualizar
+    foreach ($orden->productos as $productoActual) {
+        $productoActual->increment('stock', $productoActual->pivot->cantidad);
+    }
+    
+    // B. Quitar la vinculación actual
+    $orden->productos()->detach();
+
+    // C. Vincular nuevos productos y restar stock
+    if ($request->has('productos')) {
+        $productosSync = [];
+        foreach ($request->productos as $prodData) {
+            $producto = Producto::find($prodData['id']);
+            
+            if ($producto && $producto->stock >= $prodData['cantidad']) {
+                // Preparamos los datos para el sync
+                $productosSync[$prodData['id']] = [
+                    'cantidad' => $prodData['cantidad'],
+                    'precio_unitario' => $prodData['precio'],
+                    // 🔥 AJUSTE AQUÍ: Asegurar que el booleano llega correctamente
+                    'cobrar' => filter_var($prodData['cobrar'], FILTER_VALIDATE_BOOLEAN), 
+                ];
+
+                // Restamos el stock
+                $producto->decrement('stock', $prodData['cantidad']);
+            }
+        }
+        // 🔥 SOLUCIÓN: Usar sync con los datos mapeados
+        $orden->productos()->sync($productosSync);
+    }
+
+    // 2. Actualizar datos de la orden
+    $orden->update([
+        'vehiculo_id' => $request->vehiculo_id,
+        'fecha' => $request->fecha,
+        'total' => $request->total,
+        'costo_insumos' => $request->costo_insumos ?? 0,
+        'notas_insumos' => $request->notas_insumos,
+    ]);
+
+    // 3. --- LOGICA DE SERVICIOS ---
+    if ($request->has('servicios')) {
         $serviciosSync = [];
         foreach ($request->servicios as $s) {
             $serviciosSync[$s['id']] = ['precio' => $s['precio']];
         }
         $orden->servicios()->sync($serviciosSync);
-
-        return redirect()->route('ordenes.index')->with('success', 'Orden actualizada');
+    } else {
+        $orden->servicios()->detach(); // Si no hay servicios, quitarlos todos
     }
+
+    return redirect()->route('ordenes.index')->with('success', 'Orden actualizada correctamente');
+}
 
     public function destroy(string $id)
     {
