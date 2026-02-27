@@ -85,10 +85,23 @@
             <div x-show="cumpleFiltros('{{ strtolower($orden->cliente?->nombre ?? 'Sin Cliente') }}', '{{ strtolower($orden->vehiculo?->placa ?? 'Sin Placa') }}', '{{ $orden->fecha }}')"
                 class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
                 
-                <div class="flex justify-between mb-3">
-                    <div class="bg-blue-100 px-3 py-1 rounded-lg">
-                        <span class="text-blue-600 text-xs font-bold uppercase">{{$orden->estado}}</span>
-                    </div>
+                <div class="flex justify-between items-center mb-3">
+                    {{-- 🔥 SELECT PARA CAMBIAR ESTADO --}}
+                    <form action="{{ route('ordenes.actualizarEstado', $orden->id) }}" method="POST" class="inline">
+                        @csrf
+                        @method('PATCH')
+                        <select name="estado" onchange="this.form.submit()" 
+                            class="text-xs font-bold uppercase rounded-lg px-3 py-1 border-0
+                            {{ $orden->estado == 'Finalizado' ? 'bg-green-100 text-green-700' : '' }}
+                            {{ $orden->estado == 'Pendiente' ? 'bg-yellow-100 text-yellow-700' : '' }}
+                            {{ $orden->estado == 'Cancelado' ? 'bg-red-100 text-red-700' : '' }}
+                            ">
+                            <option value="Pendiente" {{ $orden->estado == 'Pendiente' ? 'selected' : '' }}>Pendiente</option>
+                            <option value="Finalizado" {{ $orden->estado == 'Finalizado' ? 'selected' : '' }}>Finalizado</option>
+                            <option value="Cancelado" {{ $orden->estado == 'Cancelado' ? 'selected' : '' }}>Cancelado</option>
+                        </select>
+                    </form>
+
                     <div class="flex gap-2">
                         {{-- 4. BOTÓN EDITAR CORREGIDO --}}
                         <button @click="prepararEdicion({{ $orden->toJson() }})" class="text-yellow-500 hover:bg-yellow-50 p-1 rounded">✏️</button>

@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\VehiculoController;
 use App\Http\Controllers\ProductoController;
@@ -44,6 +45,8 @@ Route::get('/', function () {
 
 })->name('dashboard'); // 👈 IMPORTANTE
 
+Route::get('/', [DashboardController::class, 'index'])->name('home');
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 // Clientes
 Route::resource('clientes', ClienteController::class);
 
@@ -77,6 +80,6 @@ Route::get('/ordenes/{id}/pdf', [OrdenController::class, 'descargarPDF'])->name(
 
 Route::post('/ordenes/{id}/enviar-email', [OrdenController::class, 'enviarEmail'])->name('ordenes.enviarEmail');
 
-
+Route::patch('ordenes/{id}/estado', [OrdenController::class, 'actualizarEstado'])->name('ordenes.actualizarEstado');
 //productos
 Route::resource('productos', ProductoController::class);

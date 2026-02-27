@@ -213,5 +213,16 @@ class OrdenController extends Controller
             return back()->with('error', 'Error al enviar: ' . $e->getMessage());
         }
     }
-    
+    public function actualizarEstado(Request $request, $id)
+    {
+        $request->validate([
+            'estado' => 'required|in:Pendiente,Finalizado,Cancelado',
+        ]);
+
+        $orden = Orden::findOrFail($id);
+        $orden->estado = $request->estado;
+        $orden->save();
+
+        return redirect()->back()->with('success', 'Estado de la orden actualizado a ' . $request->estado);
+    }
 }
